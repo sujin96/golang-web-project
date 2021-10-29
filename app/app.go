@@ -43,7 +43,7 @@ func getSesssionID(r *http.Request) string {
 
 //핸들러들을 (a *AppHandler)메소드로 바꾼다
 func (a *AppHandler) indexHandler(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/signin.html", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "login/login.html", http.StatusTemporaryRedirect)
 }
 
 //핸들러들을 (a *AppHandler)메소드로 바꾼다
