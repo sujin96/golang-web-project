@@ -13,8 +13,8 @@ func (m *memoryHandler) GetMembers() []*Member {
 	return list
 }
 
-func (m *memoryHandler) AddMember(id string, pswd string, name string, birth string, gender string, email string, mobile string) *Member {
-	member := &Member{id, pswd, name, birth, gender, email, mobile}
+func (m *memoryHandler) AddMember(id string, pswd string, name string, birth string, gender string, email string, area string, bike_info string, career string, club string) *Member {
+	member := &Member{id, pswd, name, birth, gender, email, area, bike_info, career, club}
 	m.memberMap[id] = member
 	return member
 }

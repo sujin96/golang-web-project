@@ -1,6 +1,5 @@
 package main
 
-//수정합니다
 import (
 	"goweb/web22-1/app"
 	"log"
