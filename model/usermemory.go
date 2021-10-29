@@ -19,6 +19,16 @@ func (m *memoryHandler) AddMember(id string, pswd string, name string, birth str
 	return member
 }
 
+/*
+func (m *memoryHandler) UpdateMember(id string, pswd string, email string, area string, bike_info string, career string, club string) *Member {
+	member := Member{}
+	if _, ok := m.memberMap[id]; ok { // memberMap id 값이 있으면
+		delete(m.memberMap, id) //지우고
+		return member
+	}
+	return
+}
+*/
 func (m *memoryHandler) RemoveMember(id string) bool {
 	if _, ok := m.memberMap[id]; ok { // memberMap id 값이 있으면
 		delete(m.memberMap, id) //지우고
