@@ -6,12 +6,11 @@ html {
 body {
     margin: 0;
     height: 100%;
-    background: #f5f6f7;
+    background: #ffffff3d;
     font-family: Dotum,'돋움',Helvetica,sans-serif;
 }
 #logo {
     width: 240px;
-    height: 44px;
     cursor: pointer;
 }
 
@@ -176,7 +175,7 @@ select {
     border: 0;
     cursor: pointer;
     color: #fff;
-    background-color: #08a600;
+    background-color: #db2505;
     font-size: 20px;
     font-weight: 400;
     font-family: Dotum,'돋움',Helvetica,sans-serif;

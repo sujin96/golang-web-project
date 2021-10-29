@@ -77,7 +77,7 @@ func newSqliteHandler(filepath string) DBHandler {
 		`CREATE TABLE IF NOT EXISTS members (
 			id			TEXT  NOT NULL PRIMARY KEY,
 			pswd		TEXT NOT NULL,
-			name		TEXT NOT NULL,S
+			name		TEXT NOT NULL,
 			birth		DATE,
 			gender		TEXT NOT NULL,
 			email		TEXT NOT NULL,

@@ -385,11 +385,11 @@
             }
         };
 // 2단계
-        $.get('/members', function(items) {
-            items.forEach(e => {
-                addItem(e)
-            });
-        });
+        // $.get('/members', function(items) {
+        //     items.forEach(e => {
+        //         addItem(e)
+        //     });
+        // });
 
 
         memberItem.on('click', '.remove', function() {
