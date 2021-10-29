@@ -28,14 +28,21 @@
 
     var email = document.querySelector('#email');
 
-    var mobile = document.querySelector('#mobile');
+   // var mobile = document.querySelector('#mobile');
 
     var error = document.querySelectorAll('.error_next_box');
 
 
 
-    /*이벤트 핸들러 연결*/
 
+
+    
+
+    /*이벤트 핸들러 연결*/
+    area.addEventListener("focusout", checkarea);
+     bike_info.addEventListener("focusout", checkbike_info);
+    // career.addEventListener("focusout", checkcareer);
+     club.addEventListener("focusout", checkclub);
 
     id.addEventListener("focusout", checkId);
     pw1.addEventListener("focusout", checkPw);
@@ -52,11 +59,17 @@
         }
     })
     email.addEventListener("focusout", isEmailCorrect);
-    mobile.addEventListener("focusout", checkPhoneNum);
+    //mobile.addEventListener("focusout", checkPhoneNum);
 
 
-
-
+    function checkarea() {
+    }
+    function checkbike_info() {
+    }
+    function checkcareer() {
+    }
+    function checkclub() {
+    }
 
     /*콜백 함수*/
 
@@ -219,24 +232,24 @@
 
     }
 
-    function checkPhoneNum() {
-        var isPhoneNum = /([01]{2})([01679]{1})([0-9]{3,4})([0-9]{4})/;
+    // function checkPhoneNum() {
+    //     var isPhoneNum = /([01]{2})([01679]{1})([0-9]{3,4})([0-9]{4})/;
 
-        if(mobile.value === "") {
-            error[7].innerHTML = "필수 정보입니다.";
-            error[7].style.display = "block";
-            return false;
-        } else if(!isPhoneNum.test(mobile.value)) {
-            error[7].innerHTML = "형식에 맞지 않는 번호입니다.";
-            error[7].style.display = "block";
-            return false;
-        } else {
-            error[7].style.display = "none";
-            return true;
-        }
+    //     if(mobile.value === "") {
+    //         error[7].innerHTML = "필수 정보입니다.";
+    //         error[7].style.display = "block";
+    //         return false;
+    //     } else if(!isPhoneNum.test(mobile.value)) {
+    //         error[7].innerHTML = "형식에 맞지 않는 번호입니다.";
+    //         error[7].style.display = "block";
+    //         return false;
+    //     } else {
+    //         error[7].style.display = "none";
+    //         return true;
+    //     }
 
         
-    }
+    // }
 
 
     /*
@@ -348,22 +361,27 @@
             var birth = yyyy + '-' + mm + '-' + dd;
             var gender = $('#gender').val();
             var email = $('#email').val();
-            var mobile = $('#mobile').val();
+          //  var mobile = $('#mobile').val();
+            var club = $('#club').val();
 
-            if (checkId() && checkPw() && comparePw() && checkName() && isBirthCompleted() && isEmailCorrect() && checkPhoneNum()) {
-                $.post("/members", {id : id, pswd : pswd1, name : name, gender : gender, birth : birth, email : email, mobile : mobile}, addItem)
+            var area = $('#area').val();
+            var bike_info = $('#bike_info').val();
+            var career = $('#career').val();
+
+            if (checkId() || checkPw() || comparePw() || checkName() || isBirthCompleted() || isEmailCorrect() || checkclub()|| checkarea()|| checkbike_info()|| checkcareer()) {
+                $.post("/members", {id : id, pswd : pswd1, name : name, gender : gender, birth : birth, email : email, club : club, area :area,bike_info:bike_info,career:career}, addItem)
                 //memberItem.append("<li><div class='form-check'><label class='form-check-label'><input class='checkbox' type='checkbox' />" + item + "<i class='input-helper'></i></label></div><i class='remove mdi mdi-close-circle-outline'></i></li>");
                 memberDataInput.val("");
             }
         });
 
-        
+
 
         var addItem = function(item) {
             if (item.completed) {
-                memberItem.append("<li class='completed'" + " id='" + item.id + "'>" + item.id + "," + item.pswd + "," + item.name + "," + item.birth + "," + item.gender + "," + item.email + "," + item.mobile + "<i class='input-helper'></i></label></div><i class='remove mdi mdi-close-circle-outline'></i></li>");
+                memberItem.append("<li class='completed'" + " id='" + item.id + "'>" + item.id + "," + item.pswd + "," + item.name + "," + item.birth + "," + item.gender + "," + item.email + "," + item.club + "," + item.area + "," + item.bike_info + "," + item.career + "<i class='input-helper'></i></label></div><i class='remove mdi mdi-close-circle-outline'></i></li>");
             } else {
-                memberItem.append("<li " + " id='" + item.id + "'>" + item.id + "," + item.pswd + "," + item.name + "," + item.birth + "," + item.gender + "," + item.email + "," + item.mobile + "<i class='input-helper'></i></label></div><i class='remove mdi mdi-close-circle-outline'></i></li>");
+                memberItem.append("<li " + " id='" + item.id + "'>" + item.id + "," + item.pswd + "," + item.name + "," + item.birth + "," + item.gender + "," + item.email + "," + item.club + "," + item.area + "," + item.bike_info + "," + item.career + "<i class='input-helper'></i></label></div><i class='remove mdi mdi-close-circle-outline'></i></li>");
             }
         };
 // 2단계
