@@ -796,3 +796,5 @@ func main() {
 	// http.ListenAndServe(":"+port, nil)  //! 헤로쿠 작업할때 필요 하다 11.07
 	http.ListenAndServe(":8080", nil)
 }
+
+//수정전
