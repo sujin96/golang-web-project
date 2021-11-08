@@ -90,11 +90,6 @@ type User struct {
 	Email        string //! 새롭게
 }
 
-type Input struct {
-	Id       string
-	Password string
-}
-
 // CustomError: error type struct
 type CustomError struct {
 	Code    string
