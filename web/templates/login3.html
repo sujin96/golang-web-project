@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="web/templates/login3.js"></script>
+<link rel="stylesheet" href="web/templates/login3.css">
+<meta name="viewport" content="width=device-width, initial-scale=1>
+<!------ Include the above in your HEAD tag ---------->
+</head>
+<body>
+
+
+
+<div class="container">
+   <div id="login-box">
+      <div class="logo">
+         <!-- <img src="NAVER_CI_Green.png" > -->
+         <!-- <img src="TECH_CI_Green2.png" id="logo"> -->
+         <h1 class="logo-caption"><span class="tweak">L</span>ogin</h1>
+      </div>/.logo
+      <div class="controls">
+         <!-- <input type="text" name="username" placeholder="Username" class="form-control" />
+         <input type="text" name="username" placeholder="Password" class="form-control" /> -->
+
+         <form class = "input" action="" method="post">
+            <h4><input type="text" name="id" id="id" placeholder="Id"> </h4>
+            <h4><input type="password" name="password" id="pw" placeholder="Password"> </h4>
+            {{if .error}}
+            <h5 class="fail"> {{.error.Message}}</h5>
+            {{end}}
+            <button type="button" onclick="location.href='/signup'">회원가입</button>
+            <input type="submit" value="로그인">
+        </form>
+
+         <input id="stay-checkbox" type="checkbox"></input>
+         <label for="stay-checkbox" id="stay-text">로그인 상태 유지</label>
+      </div><!-- /.controls -->
+   </div><!-- /#login-box -->
+</div><!-- /.container -->
+<div id="particles-js"></div>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+<!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>-->
+
+</body>
+</html>
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>repl.it</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    Hello world
+    <script src="script.js"></script>
+  </body>
+</html> -->

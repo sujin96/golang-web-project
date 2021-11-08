@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>글 목록</title>
+    <link rel="stylesheet" href="/web/static/css/style.css">
+</head>
+<body>
+
+
+
+    {{$target := .Target}}
+    {{$value := .Value}}
+    {{$page := .Page}}
+
+    <div class="main_title">
+        <h2><a href="/">Backcount Rank Board</a></h2>
+    </div>
+    <div class="sub_title">
+        {{/* <h3>랭킹게시판</h3> */}}
+    </div>
+{{/* <p>-표시{{.PostData}}</p> */}}
+    {{range .PostData}}
+        {{/* <div class="post_box"> */}}
+            - <a href="/post/{{.ID}}">{{.Userid}}</a>   <h4 style="display:inline">백패달{{.Backcount}}</h4>|||  앞패달{{.Frontcount}}|||  자전거정보{{.Bike_info}}|||  경력{{.Career}} |||  이메일{{.Email}} |||  지역{{.Area}} <br>
+            
+            {{/* <br><br> */}}
+        {{/* </div> */}}
+    {{ end }}
+
+  <li>Madrid</li>
+</ul>
+
+
+    {{/* // <h4><p> -Name : {{.Name}}</p></h4> */}}
+    <div class="page">
+        {{ range .PageList }}
+            {{ if (eq . $page) }}
+                <strong style="color:crimson;text-decoration:underline;">{{ . }}</strong>
+            {{else}}
+                <a href="/board/?target={{$target}}&v={{$value}}&page={{ . }}">{{ . }}</a>
+            {{ end }}
+        {{ end }}
+    </div>
+
+
+    <div class="sub_title">
+        <form method="post">
+            <select name="target">
+                <option value="title">제목</option>
+                <option value="author">작성자</option>
+            </select>
+            <input type="text" name="v">
+            <button type="submit">검색</button>
+        </form>
+    </div>
+</body>
+</html>
