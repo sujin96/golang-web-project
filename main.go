@@ -25,8 +25,6 @@ import (
 	"gorm.io/gorm"
 )
 
-//12
-//! board--------------------------------------------------------------123123
 type Board struct {
 	ID           uint `gorm:"primarykey"`
 	CreatedAt    time.Time
@@ -53,6 +51,12 @@ type Board struct {
 	Email        string //! 새롭게
 }
 
+type Session struct {
+	SessionId   string
+	UserId      string
+	CurrentTime time.Time
+}
+
 type PassedData struct {
 	PostData []Board
 	Target   string
@@ -61,71 +65,6 @@ type PassedData struct {
 	Page     string
 }
 
-var (
-	gormDB *gorm.DB
-	//go:embed web
-	staticContent embed.FS
-)
-
-const (
-	MaxPerPage = 10
-)
-
-//!  session.go-------------------------------------------------------------------234-----
-func getUser(w http.ResponseWriter, req *http.Request) User {
-	fmt.Println("getUser()")
-	// get cookie
-	c, err := req.Cookie("session")
-	if err != nil {
-		sID := uuid.New()
-		c = &http.Cookie{
-			Name:  "session",
-			Value: sID.String(),
-		}
-	}
-	c.MaxAge = sessionLength
-	http.SetCookie(w, c)
-
-	// if the user exists already, get user
-	var u User
-
-	un, err := ReadSession(db, c.Value)
-	if err != nil {
-		log.Fatal(err)
-	}
-	UpdateCurrentTime(db, un)
-	u, _ = ReadUserById(db, un)
-	return u
-}
-
-func alreadyLoggedIn(w http.ResponseWriter, req *http.Request) bool {
-	fmt.Println("alreadyLoggedIn()")
-	c, err := req.Cookie("session")
-	if err != nil {
-		return false
-	}
-
-	un, err := ReadSession(db, c.Value)
-	if err != nil {
-		return false
-	}
-
-	UpdateCurrentTime(db, un)
-
-	_, err = ReadUserById(db, un)
-	if err != nil {
-		return false
-	}
-
-	c.MaxAge = sessionLength
-	http.SetCookie(w, c)
-	return true
-}
-
-//!  session.go------------------------------------------------------------------------
-
-//!   crud.go----------------------------------------
-// Topic table columns
 type User struct {
 	Id           string
 	Password     string
@@ -162,95 +101,66 @@ type CustomError struct {
 	Message string
 }
 
+/*****************************************************************************뭔지 잘 모르는 것들*************************************************/
+//필요한가 잘 모르겠음
 func (e *CustomError) Error() string {
 	return e.Code + ", " + e.Message
 }
 
+//필요한가 잘 모르겟음
 func (e *CustomError) StatusCode() int {
 	result, _ := strconv.Atoi(e.Code)
 	return result
 }
 
-// Create1 insert data to db  //! 11월8일 05:00 주석으로 처리 필요 없어 보임
-func Create1(db *sql.DB) {
-	// Create 1
-	insert, err := db.Query("INSERT INTO topic (title, description, created, author, profile) VALUES ('GOPHER', 'Hello Golang', NOW(), 'techno', 'dev')")
+// Delete delete data from db  //! user 전용 11.08
+// func Delete(db *sql.DB) {
+// 	// Delete
+// 	stmt, err := db.Prepare("delete from user where `id`=?")
+// 	checkError(err)
+
+// 	res, err := stmt.Exec(5)
+// 	checkError(err)
+
+// 	a, err := res.RowsAffected()
+// 	checkError(err)
+// 	fmt.Println(a, "rows in set")
+// }
+
+// Update change data from db인데 뭔지 잘 모르겠음
+func Update(db *sql.DB) {
+	// Update
+	stmt, err := db.Prepare("update topic set profile=? where profile=?")
 	checkError(err)
-	defer insert.Close()
+
+	res, err := stmt.Exec("developer", "dev")
+	checkError(err)
+
+	a, err := res.RowsAffected()
+	checkError(err)
+
+	fmt.Println(a, "rows in set")
 }
 
-func CreateSession(db *sql.DB, sessionId string, userId string) {
-	stmt, err := db.Prepare("insert into session values (?, ?, ?)")
-	checkError(err)
-	defer stmt.Close()
-	_, err = stmt.Exec(sessionId, userId, time.Now().Format("2006-01-02 15:04:05"))
-	checkError(err)
+//페이지 리스트인데 뭔지 잘 모르겠음
+func getPageList(p string, limit int) []string {
+	page, _ := strconv.Atoi(p)
+	var result []string
 
-}
-
-// Create2 insert data to db
-func CreateUser(db *sql.DB, req *http.Request) *CustomError { //! 이거는 어디껀가
-	// req.ParseForm()
-	id := req.PostFormValue("id")
-	password := req.PostFormValue("password")
-	name := req.PostFormValue("name")
-	t := time.Now().Format("2006-01-02 15:04:05")
-	// Create 2
-	stmt, err := db.Prepare("insert into user (id, password, name, created,day,totaltime,trytime,recoverytime,backcount,avgRPM,avgSpeed,distance,musclenum,kcalorynum,gender,area,birth,bike_info,career,club,email) values (?,?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-	checkError(err)
-	defer stmt.Close()
-
-	bs, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-	_, err = stmt.Exec(id, bs, name, t)
-	if err != nil {
-		fmt.Println("error:", err)
-		return &CustomError{Code: "1062", Message: "already exists id."}
-	}
-	return nil
-}
-
-func ReadSession(db *sql.DB, sessionId string) (string, error) {
-	fmt.Println("ReadSession()")
-	row, err := db.Query("select user_id from session where session_id = ?", sessionId)
-	checkError(err)
-	defer row.Close()
-	var userId string
-
-	for row.Next() {
-		err = row.Scan(&userId)
-		if err != nil {
-			log.Fatal(err)
+	for i := page - 2; i <= page+2; i++ {
+		if i > 0 && i <= limit {
+			result = append(result, strconv.Itoa(i))
 		}
 	}
-	return userId, nil
+	return result
 }
 
-func ReadUserById(db *sql.DB, userId string) (User, error) {
-
-	fmt.Println("ReadUserById()")
-	row, err := db.Query("select * from user where id = ?", userId)
-	//row, err := db.Query("select * from user")
-
-	checkError(err)
-	defer row.Close()
-
-	var user = User{} //! 배열로 받아서 모든 테이블 정보 가져오기 해야함
-
-	for row.Next() {
-		err := row.Scan(&user.Id, &user.Password, &user.Name, &user.Created, &user.Day, &user.Totaltime, &user.Trytime, &user.Recoverytime, &user.Frontcount, &user.Backcount, &user.AvgRPM, &user.AvgSpeed, &user.Distance, &user.Musclenum, &user.Kcalorynum, &user.Gender, &user.Area, &user.Birth, &user.Bike_info, &user.Career, &user.Club, &user.Email)
-		if err != nil {
-			log.Fatal(err) //! 2021/11/4  이유
-		}
-	}
-
-	return user, nil
-}
-
-// Read select all data from db
+/**********************************************************조회*************************************************************************/
+// db에서 모든 데이터를 조회
 func ReadUser(db *sql.DB, req *http.Request) (User, *CustomError) {
 	// Read
 	id, pw := req.PostFormValue("id"), req.PostFormValue("password")
-	rows, err := db.Query("select * from user where id = ?", id)
+	rows, err := db.Query("select * from users where id = ?", id)
 	checkError(err)
 	defer rows.Close()
 
@@ -270,80 +180,39 @@ func ReadUser(db *sql.DB, req *http.Request) (User, *CustomError) {
 	return user, nil
 }
 
-// Update change data from db
-func Update(db *sql.DB) {
-	// Update
-	stmt, err := db.Prepare("update topic set profile=? where profile=?")
+//유저를 Id로 조회
+func ReadUserById(db *sql.DB, userId string) (User, error) {
+
+	fmt.Println("ReadUserById()")
+	row, err := db.Query("select * from users where id = ?", userId)
+	//row, err := db.Query("select * from user")
+
 	checkError(err)
+	defer row.Close()
 
-	res, err := stmt.Exec("developer", "dev")
-	checkError(err)
+	var user = User{} //! 배열로 받아서 모든 테이블 정보 가져오기 해야함
 
-	a, err := res.RowsAffected()
-	checkError(err)
-
-	fmt.Println(a, "rows in set")
-}
-
-func UpdateCurrentTime(db *sql.DB, sessionID string) {
-	stmt, err := db.Prepare("UPDATE session SET `current_time`=? WHERE `user_id`=?")
-	checkError(err)
-	defer stmt.Close()
-
-	_, err = stmt.Exec(time.Now().Format("2006-01-02 15:04:05"), sessionID)
-	checkError(err)
-}
-
-func CleanSessions(db *sql.DB) {
-
-	var sessionID string
-	var currentTime string
-	rows, err := db.Query("select session_id, current_time from session")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(&sessionID, &currentTime)
+	for row.Next() {
+		err := row.Scan(&user.Id, &user.Password, &user.Name, &user.Created, &user.Day, &user.Totaltime, &user.Trytime, &user.Recoverytime, &user.Frontcount, &user.Backcount, &user.AvgRPM, &user.AvgSpeed, &user.Distance, &user.Musclenum, &user.Kcalorynum, &user.Gender, &user.Area, &user.Birth, &user.Bike_info, &user.Career, &user.Club, &user.Email)
 		if err != nil {
-			log.Fatal(err)
-		}
-		t, _ := time.Parse("2006-01-02 15:04:05", currentTime)
-		if time.Now().Sub(t) > (time.Second * 30) {
-			DeleteSession(db, sessionID)
+			log.Fatal(err) //! 2021/11/4  이유
 		}
 	}
 
-	dbSessionCleaned = time.Now()
+	return user, nil
 }
 
-func DeleteSession(db *sql.DB, sessionID string) {
-	stmt, err := db.Prepare("delete from session where `session_id`=?")
-	checkError(err)
+/*******************************************************잡동 사니*****************************************************************/
 
-	_, err = stmt.Exec(sessionID)
-	checkError(err)
+var (
+	gormDB *gorm.DB
+	//go:embed web
+	staticContent embed.FS
+)
 
-}
-
-// Delete delete data from db  //! user 전용 11.08
-// func Delete(db *sql.DB) {
-// 	// Delete
-// 	stmt, err := db.Prepare("delete from user where `id`=?")
-// 	checkError(err)
-
-// 	res, err := stmt.Exec(5)
-// 	checkError(err)
-
-// 	a, err := res.RowsAffected()
-// 	checkError(err)
-// 	fmt.Println(a, "rows in set")
-// }
-
-func pingDB(db *sql.DB) {
-	err := db.Ping()
-	checkError(err)
-}
+const (
+	MaxPerPage = 10
+)
 
 func checkError(err error) {
 	if err != nil {
@@ -351,20 +220,86 @@ func checkError(err error) {
 	}
 }
 
-func crud() {
-	fmt.Println("Go MYSQL Tutorial")
-	var connectionString = fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", user, password, host, database)
+const (
+	//추가
+	user     = "root"
+	password = "1234"
+	//port     = "3307"
+	database = "tech"
+	host     = "127.0.0.1"
+)
 
-	// Connect to mysql server
-	db, err := sql.Open("mysql", connectionString)
-	checkError(err)
-	defer db.Close()
-	pingDB(db)
+// const (  //! 헤로쿠 작업할때 필요하다
+// 	//추가/
+// 	user     = "bfbae725adafff"
+// 	password = "ef851b9b"
+// 	//port     = "3307"
+// 	database = "heroku_3e81fa660b7be57"
+// 	host     = "us-cdbr-east-04.cleardb.com"
+// )
 
+var (
+	db               *sql.DB
+	tpl              *template.Template
+	dbSessionCleaned time.Time
+)
+
+var content embed.FS
+
+//템플릿 지정
+func init() {
+	tpl = template.Must(template.ParseGlob("web/templates/*"))
+
+	dbSessionCleaned = time.Now()
 }
 
-//!   crud.go----------------------------------------
+/*******************************************************************회원가입******************************************************************/
+// 유저생성
+func CreateUser(db *sql.DB, req *http.Request) *CustomError { //! 이거는 어디껀가
+	// req.ParseForm()
+	id := req.PostFormValue("id")
+	password := req.PostFormValue("password")
+	name := req.PostFormValue("name")
+	t := time.Now().Format("2006-01-02 15:04:05")
+	// Create 2
+	stmt, err := db.Prepare("insert into users (id, password, name, created,day,totaltime,trytime,recoverytime,backcount,avgRPM,avgSpeed,distance,musclenum,kcalorynum,gender,area,birth,bike_info,career,club,email) values (?,?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	checkError(err)
+	defer stmt.Close()
 
+	bs, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	_, err = stmt.Exec(id, bs, name, t)
+	if err != nil {
+		fmt.Println("error:", err)
+		return &CustomError{Code: "1062", Message: "already exists id."}
+	}
+	return nil
+}
+
+//회원가입
+func signUp(w http.ResponseWriter, req *http.Request) {
+	if alreadyLoggedIn(w, req) {
+		http.Redirect(w, req, "/index", http.StatusSeeOther)
+		return
+	}
+	if req.Method == http.MethodGet {
+		tpl.ExecuteTemplate(w, "signup.gohtml", nil)
+	}
+
+	if req.Method == http.MethodPost {
+		err := CreateUser(db, req)
+		if err != nil {
+			errMsg := map[string]interface{}{"error": err}
+			tpl.ExecuteTemplate(w, "signup.gohtml", errMsg)
+		} else {
+			http.Redirect(w, req, "/", http.StatusSeeOther)
+		}
+		return
+	}
+}
+
+/***************************************관리자 페이지*******************************************************/
+
+//관리자 페이지
 func board(w http.ResponseWriter, r *http.Request) {
 	var b []Board
 	if !alreadyLoggedIn(w, r) {
@@ -453,7 +388,101 @@ func board(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "board.gohtml", temp)
 }
 
-func board2(w http.ResponseWriter, r *http.Request) {
+//이거는 뭔지 아직 모르겠음
+func write(w http.ResponseWriter, r *http.Request) { //! board 데이터 수정
+
+	if r.Method == http.MethodPost {
+		email := r.PostFormValue("email")
+		area := r.PostFormValue("area")
+		bike_info := r.PostFormValue("bike_info")
+
+		newPost := Board{Email: email, Area: area, Bike_info: bike_info}
+		gormDB.Create(&newPost)
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+
+		return
+	}
+
+	tpl.ExecuteTemplate(w, "write.gohtml", nil)
+}
+
+//관리자페이지에 삭제
+func delete(w http.ResponseWriter, r *http.Request) { //! board 삭제
+	id := strings.TrimPrefix(r.URL.Path, "/delete/")
+	gormDB.Delete(&Board{}, id)
+
+	http.Redirect(w, r, "/board", http.StatusSeeOther)
+}
+
+//관리자 페이지 수정 (아직 안됨)
+func edit(w http.ResponseWriter, r *http.Request) {
+
+	id := strings.TrimPrefix(r.URL.Path, "/edit/")
+	var b Board
+
+	gormDB.First(&b, id)
+
+	if r.Method == http.MethodPost {
+
+		gormDB.Model(&b).Updates(Board{Email: r.PostFormValue("email"), Area: r.PostFormValue("area"), Bike_info: r.PostFormValue("bike_info")})
+		// gormDB.Model(&b).Updates(Board{Name: r.PostFormValue("name"), Totaltime: r.PostFormValue("totaltime")})
+		var byteBuf bytes.Buffer
+		byteBuf.WriteString("/post/")
+		byteBuf.WriteString(id)
+		http.Redirect(w, r, byteBuf.String(), http.StatusSeeOther)
+
+	}
+
+	tpl.ExecuteTemplate(w, "write.gohtml", b)
+}
+
+//관리자 페이지 수정 하기전 조회
+func post(w http.ResponseWriter, r *http.Request) {
+	// id := r.FormValue("id")
+	id := strings.TrimPrefix(r.URL.Path, "/post/")
+
+	var b Board
+	gormDB.First(&b, id)
+
+	tpl.ExecuteTemplate(w, "post.gohtml", b)
+}
+
+/***************************************주요 메뉴들*********************************************************/
+
+// index 페이지(dashboard.html -> mydata.html)
+func mydata(w http.ResponseWriter, req *http.Request) {
+
+	// var b []Board
+
+	if !alreadyLoggedIn(w, req) {
+		http.Redirect(w, req, "/", http.StatusSeeOther)
+		return
+	}
+	u := getUser(w, req)
+	tpl.ExecuteTemplate(w, "mydata.html", u)
+}
+
+// mypage (index2.html -> mypage.html)
+func mypage(w http.ResponseWriter, req *http.Request) {
+
+	// var b []Board
+
+	// if !alreadyLoggedIn(w, req) {
+	// 	http.Redirect(w, req, "/", http.StatusSeeOther)
+	// 	return
+	// }
+	if !alreadyLoggedIn(w, req) {
+		http.Redirect(w, req, "/", http.StatusSeeOther)
+		return
+	}
+	u := getUser(w, req)
+	tpl.ExecuteTemplate(w, "mypage.html", u) //! html로 바꾸는법~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+}
+
+//랭킹  (board2.html -> ranking.html)
+func ranking(w http.ResponseWriter, r *http.Request) {
 	var b []Board
 
 	if !alreadyLoggedIn(w, r) {
@@ -493,7 +522,7 @@ func board2(w http.ResponseWriter, r *http.Request) {
 				Page:     page,
 			}
 
-			tpl.ExecuteTemplate(w, "tables.gohtml", temp)
+			tpl.ExecuteTemplate(w, "ranking.gohtml", temp)
 			return
 		case "area":
 			q := gormDB.Where("area LIKE ?", fmt.Sprintf("%%%s%%", keyword)).Find(&b)
@@ -514,7 +543,7 @@ func board2(w http.ResponseWriter, r *http.Request) {
 				Page:     page,
 			}
 
-			tpl.ExecuteTemplate(w, "tables.gohtml", temp)
+			tpl.ExecuteTemplate(w, "ranking.gohtml", temp)
 			return
 		}
 	}
@@ -538,118 +567,191 @@ func board2(w http.ResponseWriter, r *http.Request) {
 		Page:     page,
 	}
 
-	tpl.ExecuteTemplate(w, "tables.gohtml", temp)
+	tpl.ExecuteTemplate(w, "ranking.gohtml", temp)
 }
 
-func write(w http.ResponseWriter, r *http.Request) { //! board 데이터 수정
+/***************************************세션 관련************************************************************/
 
-	if r.Method == http.MethodPost {
-		email := r.PostFormValue("email")
-		area := r.PostFormValue("area")
-		bike_info := r.PostFormValue("bike_info")
-
-		newPost := Board{Email: email, Area: area, Bike_info: bike_info}
-		gormDB.Create(&newPost)
-
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-
-		return
-	}
-
-	tpl.ExecuteTemplate(w, "write.gohtml", nil)
-}
-
-func delete(w http.ResponseWriter, r *http.Request) { //! board 삭제
-	id := strings.TrimPrefix(r.URL.Path, "/delete/")
-	gormDB.Delete(&Board{}, id)
-
-	http.Redirect(w, r, "/board", http.StatusSeeOther)
-}
-
-func edit(w http.ResponseWriter, r *http.Request) {
-
-	id := strings.TrimPrefix(r.URL.Path, "/edit/")
-	var b Board
-
-	gormDB.First(&b, id)
-
-	if r.Method == http.MethodPost {
-
-		gormDB.Model(&b).Updates(Board{Email: r.PostFormValue("email"), Area: r.PostFormValue("area"), Bike_info: r.PostFormValue("bike_info")})
-		// gormDB.Model(&b).Updates(Board{Name: r.PostFormValue("name"), Totaltime: r.PostFormValue("totaltime")})
-		var byteBuf bytes.Buffer
-		byteBuf.WriteString("/post/")
-		byteBuf.WriteString(id)
-		http.Redirect(w, r, byteBuf.String(), http.StatusSeeOther)
-
-	}
-
-	tpl.ExecuteTemplate(w, "write.gohtml", b)
-}
-func post(w http.ResponseWriter, r *http.Request) {
-	// id := r.FormValue("id")
-	id := strings.TrimPrefix(r.URL.Path, "/post/")
-
-	var b Board
-	gormDB.First(&b, id)
-
-	tpl.ExecuteTemplate(w, "post.gohtml", b)
-}
-
-func getPageList(p string, limit int) []string {
-	page, _ := strconv.Atoi(p)
-	var result []string
-
-	for i := page - 2; i <= page+2; i++ {
-		if i > 0 && i <= limit {
-			result = append(result, strconv.Itoa(i))
-		}
-	}
-	return result
-}
-
-//! board.go --------------------------------- 이까지가 board.go
-
-//! account.go ---------------------------------
-const (
-	//추가
-	user     = "root"
-	password = "1234"
-	//port     = "3307"
-	database = "user"
-	host     = "127.0.0.1"
-)
-
-// const (  //! 헤로쿠 작업할때 필요하다
-// 	//추가/
-// 	user     = "bfbae725adafff"
-// 	password = "ef851b9b"
-// 	//port     = "3307"
-// 	database = "heroku_3e81fa660b7be57"
-// 	host     = "us-cdbr-east-04.cleardb.com"
-// )
-
-//! account.go ---------------------------------
-
-// var db *sql.DB
-// var tpl *template.Template
-var (
-	db               *sql.DB
-	tpl              *template.Template
-	dbSessionCleaned time.Time
-)
-
-//go:embed web
-var content embed.FS
-
+//세션 길이
 const sessionLength int = 60
 
-func init() {
-	tpl = template.Must(template.ParseGlob("web/templates/*"))
+//세션 생성
+func CreateSession(db *sql.DB, sessionId string, userId string) {
+	stmt, err := db.Prepare("insert into sessions values (?, ?, ?)")
+	checkError(err)
+	defer stmt.Close()
+	_, err = stmt.Exec(sessionId, userId, time.Now().Format("2006-01-02 15:04:05"))
+	checkError(err)
+}
+
+//세션을 통해 유저 정보 가져오기
+func getUser(w http.ResponseWriter, req *http.Request) User {
+	fmt.Println("getUser()")
+	// get cookie
+	c, err := req.Cookie("sessions")
+	if err != nil {
+		sID := uuid.New()
+		c = &http.Cookie{
+			Name:  "sessions",
+			Value: sID.String(),
+		}
+	}
+	c.MaxAge = sessionLength
+	http.SetCookie(w, c)
+
+	// if the user exists already, get user
+	var u User
+
+	un, err := ReadSession(db, c.Value)
+	if err != nil {
+		log.Fatal(err)
+	}
+	UpdateCurrentTime(db, un)
+	u, _ = ReadUserById(db, un)
+	return u
+}
+
+//이미 로그인이 되어있는지 세션을 통해 확인
+func alreadyLoggedIn(w http.ResponseWriter, req *http.Request) bool {
+	fmt.Println("alreadyLoggedIn()")
+	c, err := req.Cookie("sessions")
+	if err != nil {
+		return false
+	}
+
+	un, err := ReadSession(db, c.Value)
+	if err != nil {
+		return false
+	}
+
+	UpdateCurrentTime(db, un)
+
+	_, err = ReadUserById(db, un)
+	if err != nil {
+		return false
+	}
+
+	c.MaxAge = sessionLength
+	http.SetCookie(w, c)
+	return true
+}
+
+//세션 로그인에 시간 표시
+func UpdateCurrentTime(db *sql.DB, sessionID string) {
+	stmt, err := db.Prepare("UPDATE sessions SET `current_time`=? WHERE `user_id`=?")
+	checkError(err)
+	defer stmt.Close()
+
+	_, err = stmt.Exec(time.Now().Format("2006-01-02 15:04:05"), sessionID)
+	checkError(err)
+}
+
+//세션 초기화
+func CleanSessions(db *sql.DB) {
+
+	var sessionID string
+	var currentTime string
+	rows, err := db.Query("select session_id, current_time from sessions")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&sessionID, &currentTime)
+		if err != nil {
+			log.Fatal(err)
+		}
+		t, _ := time.Parse("2006-01-02 15:04:05", currentTime)
+		if time.Now().Sub(t) > (time.Second * 60) {
+			DeleteSession(db, sessionID)
+		}
+	}
 
 	dbSessionCleaned = time.Now()
 }
 
+//세션 삭제
+func DeleteSession(db *sql.DB, sessionID string) {
+	stmt, err := db.Prepare("delete from sessions where `session_id`=?")
+	checkError(err)
+
+	_, err = stmt.Exec(sessionID)
+	checkError(err)
+}
+
+//생성된 세션 읽기
+func ReadSession(db *sql.DB, sessionId string) (string, error) {
+	fmt.Println("ReadSession()")
+	row, err := db.Query("select user_id from sessions where session_id = ?", sessionId)
+	checkError(err)
+	defer row.Close()
+	var userId string
+
+	for row.Next() {
+		err = row.Scan(&userId)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	return userId, nil
+}
+
+/****************************************로그인 관련*******************************************************/
+
+//로그인
+func login(w http.ResponseWriter, req *http.Request) { //! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``
+	if alreadyLoggedIn(w, req) {
+		http.Redirect(w, req, "/mydata", http.StatusSeeOther)
+		return
+	}
+
+	if req.Method == http.MethodPost {
+		user, err := ReadUser(db, req)
+		if err != nil {
+			errMsg := map[string]interface{}{"error": err}
+			tpl.ExecuteTemplate(w, "login3.html", errMsg)
+			return
+		}
+		sID := uuid.New()
+		c := &http.Cookie{
+			Name:  "sessions",
+			Value: sID.String(),
+		}
+		http.SetCookie(w, c)
+		CreateSession(db, c.Value, user.Id)
+		http.Redirect(w, req, "/mydata", http.StatusSeeOther)
+		return
+	}
+
+	tpl.ExecuteTemplate(w, "login3.html", nil)
+}
+
+//로그아웃
+func logout(w http.ResponseWriter, req *http.Request) {
+	if !alreadyLoggedIn(w, req) {
+		http.Redirect(w, req, "/", http.StatusSeeOther)
+		return
+	}
+	c, _ := req.Cookie("sessions")
+	// delete session
+	DeleteSession(db, c.Value)
+
+	//
+	c = &http.Cookie{
+		Name:   "sessions",
+		Value:  "",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, c)
+
+	if time.Now().Sub(dbSessionCleaned) > (time.Second * 30) {
+		go CleanSessions(db)
+	}
+
+	http.Redirect(w, req, "/", http.StatusSeeOther)
+}
+
+/********************************************************메인함수************************************************************/
 func main() {
 	// port := os.Getenv("PORT") //! 헤로쿠 작업할때 필요 하다 11.07
 	// if port == "" {
@@ -669,6 +771,7 @@ func main() {
 	defer db.Close()
 	//바꾼코드
 	err = db.Ping()
+	checkError(err)
 	gormDB, err = gorm.Open(mysql.New(mysql.Config{
 		Conn: db,
 	}), &gorm.Config{})
@@ -676,23 +779,21 @@ func main() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	gormDB.AutoMigrate(&Board{}) //! 자동으로 author, content 심어준다
-	//원래코드
-	//pingDB(db)
+	gormDB.AutoMigrate(&Board{}, &User{}, &Session{}) //! 자동으로 author, content 심어준다
 	fmt.Println("Successfully Connected to DB")
 
 	http.HandleFunc("/", login)
 	http.HandleFunc("/delete/", delete)
 	http.HandleFunc("/write/", write)
 	http.HandleFunc("/board/", board)
-	http.HandleFunc("/tables/", board2) //! "/" 있고 없고 차이 뭘까
+	http.HandleFunc("/ranking/", ranking) //1108 임 이름 변경(tables -> ranking)
 	http.HandleFunc("/post/", post)
 	http.HandleFunc("/edit/", edit)
 
-	http.HandleFunc("/index2", index2) //! 뭐여
+	http.HandleFunc("/mypage", mypage) //! 뭐여
 
 	http.HandleFunc("/signup", signUp)
-	http.HandleFunc("/index", index)
+	http.HandleFunc("/mydata", mydata)
 	http.HandleFunc("/logout", logout)
 	http.Handle("/web/", http.FileServer(http.FS(staticContent)))
 	fmt.Println("Listening...ss")
@@ -700,107 +801,3 @@ func main() {
 	// http.ListenAndServe(":"+port, nil)  //! 헤로쿠 작업할때 필요 하다 11.07
 	http.ListenAndServe(":8080", nil)
 }
-
-func index(w http.ResponseWriter, req *http.Request) {
-
-	// var b []Board
-
-	if !alreadyLoggedIn(w, req) {
-		http.Redirect(w, req, "/", http.StatusSeeOther)
-		return
-	}
-	u := getUser(w, req)
-	tpl.ExecuteTemplate(w, "dashboard.html", u) //! html로 바꾸는법~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-}
-
-func index2(w http.ResponseWriter, req *http.Request) {
-
-	// var b []Board
-
-	// if !alreadyLoggedIn(w, req) {
-	// 	http.Redirect(w, req, "/", http.StatusSeeOther)
-	// 	return
-	// }
-	if !alreadyLoggedIn(w, req) {
-		http.Redirect(w, req, "/", http.StatusSeeOther)
-		return
-	}
-	u := getUser(w, req)
-	tpl.ExecuteTemplate(w, "user.html", u) //! html로 바꾸는법~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-}
-
-func login(w http.ResponseWriter, req *http.Request) { //! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``
-	if alreadyLoggedIn(w, req) {
-		http.Redirect(w, req, "/index", http.StatusSeeOther)
-		return
-	}
-
-	if req.Method == http.MethodPost {
-		user, err := ReadUser(db, req)
-		if err != nil {
-			errMsg := map[string]interface{}{"error": err}
-			tpl.ExecuteTemplate(w, "login3.html", errMsg)
-			return
-		}
-		sID := uuid.New()
-		c := &http.Cookie{
-			Name:  "session",
-			Value: sID.String(),
-		}
-		http.SetCookie(w, c)
-		CreateSession(db, c.Value, user.Id)
-		http.Redirect(w, req, "/index", http.StatusSeeOther)
-		return
-	}
-
-	tpl.ExecuteTemplate(w, "login3.html", nil)
-}
-
-func signUp(w http.ResponseWriter, req *http.Request) {
-	if alreadyLoggedIn(w, req) {
-		http.Redirect(w, req, "/index", http.StatusSeeOther)
-		return
-	}
-	if req.Method == http.MethodGet {
-		tpl.ExecuteTemplate(w, "signup.gohtml", nil)
-	}
-
-	if req.Method == http.MethodPost {
-		err := CreateUser(db, req)
-		if err != nil {
-			errMsg := map[string]interface{}{"error": err}
-			tpl.ExecuteTemplate(w, "signup.gohtml", errMsg)
-		} else {
-			http.Redirect(w, req, "/", http.StatusSeeOther)
-		}
-		return
-	}
-}
-
-func logout(w http.ResponseWriter, req *http.Request) {
-	if !alreadyLoggedIn(w, req) {
-		http.Redirect(w, req, "/", http.StatusSeeOther)
-		return
-	}
-	c, _ := req.Cookie("session")
-	// delete session
-	DeleteSession(db, c.Value)
-
-	//
-	c = &http.Cookie{
-		Name:   "session",
-		Value:  "",
-		MaxAge: -1,
-	}
-	http.SetCookie(w, c)
-
-	if time.Now().Sub(dbSessionCleaned) > (time.Second * 30) {
-		go CleanSessions(db)
-	}
-
-	http.Redirect(w, req, "/", http.StatusSeeOther)
-}
-
-//! main에 남아야 할 내용들...........................................
