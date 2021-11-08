@@ -34,21 +34,21 @@ type Board struct {
 	Day          string
 	Totaltime    int
 	Trytime      int
-	Recoverytime int //! 이름바꿈
+	Recoverytime int
 	Frontcount   int
 	Backcount    int
-	AvgRPM       int     //! 이름 바꿈
-	AvgSpeed     float64 //! 이름 바꿈
+	AvgRPM       int
+	AvgSpeed     float64
 	Distance     float64
 	Musclenum    float64
 	Kcalorynum   float64
-	Gender       string //! 새롭게
-	Area         string //! 새롭게
-	Birth        string //! 새롭게
-	Bike_info    string //! 새롭게
-	Career       string //! 새롭게
-	Club         string //! 새롭게
-	Email        string //! 새롭게
+	Gender       string
+	Area         string
+	Birth        string
+	Bike_info    string
+	Career       string
+	Club         string
+	Email        string
 }
 
 type Session struct {
@@ -70,24 +70,24 @@ type User struct {
 	Password     string
 	Name         string
 	Created      string
-	Day          string //! 새롭게
+	Day          string
 	Totaltime    string
 	Trytime      string
-	Recoverytime string //! 이름바꿈
+	Recoverytime string
 	Frontcount   string
 	Backcount    string
-	AvgRPM       string //! 이름 바꿈
-	AvgSpeed     string //! 이름 바꿈
+	AvgRPM       string
+	AvgSpeed     string
 	Distance     string
 	Musclenum    string
 	Kcalorynum   string
-	Gender       string //! 새롭게
-	Area         string //! 새롭게
-	Birth        string //! 새롭게
-	Bike_info    string //! 새롭게
-	Career       string //! 새롭게
-	Club         string //! 새롭게
-	Email        string //! 새롭게
+	Gender       string
+	Area         string
+	Birth        string
+	Bike_info    string
+	Career       string
+	Club         string
+	Email        string
 }
 
 // CustomError: error type struct
