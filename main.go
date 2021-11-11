@@ -1,6 +1,7 @@
 package main
 
 import (
+	"VAST-WATERS-21789/models"
 	"database/sql"
 	"embed"
 	"fmt"
@@ -24,71 +25,6 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
-
-type Board struct {
-	ID           uint `gorm:"primarykey"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Userid       string
-	Name         string
-	Day          string
-	Totaltime    int
-	Trytime      int
-	Recoverytime int
-	Frontcount   int
-	Backcount    int
-	AvgRPM       int
-	AvgSpeed     float64
-	Distance     float64
-	Musclenum    float64
-	Kcalorynum   float64
-	Gender       string
-	Area         string
-	Birth        string
-	Bike_info    string
-	Career       string
-	Club         string
-	Email        string
-}
-
-type Session struct {
-	SessionId   string
-	UserId      string
-	CurrentTime time.Time
-}
-
-type PassedData struct {
-	PostData []Board
-	Target   string
-	Value    string
-	PageList []string
-	Page     string
-}
-
-type User struct {
-	Id           string
-	Password     string
-	Name         string
-	Created      string
-	Day          string
-	Totaltime    string
-	Trytime      string
-	Recoverytime string
-	Frontcount   string
-	Backcount    string
-	AvgRPM       string
-	AvgSpeed     string
-	Distance     string
-	Musclenum    string
-	Kcalorynum   string
-	Gender       string
-	Area         string
-	Birth        string
-	Bike_info    string
-	Career       string
-	Club         string
-	Email        string
-}
 
 // CustomError: error type struct
 type CustomError struct {
@@ -152,14 +88,14 @@ func getPageList(p string, limit int) []string {
 
 /**********************************************************조회*************************************************************************/
 // db에서 모든 데이터를 조회
-func ReadUser(db *sql.DB, req *http.Request) (User, *CustomError) {
+func ReadUser(db *sql.DB, req *http.Request) (models.User, *CustomError) {
 	// Read
 	id, pw := req.PostFormValue("id"), req.PostFormValue("password")
 	rows, err := db.Query("select * from users where id = ?", id)
 	checkError(err)
 	defer rows.Close()
 
-	var user = User{}
+	var user = models.User{}
 
 	if !rows.Next() {
 		return user, &CustomError{Code: "401", Message: "ID doesn't exist."}
@@ -176,7 +112,7 @@ func ReadUser(db *sql.DB, req *http.Request) (User, *CustomError) {
 }
 
 //유저를 Id로 조회
-func ReadUserById(db *sql.DB, userId string) (User, error) {
+func ReadUserById(db *sql.DB, userId string) (models.User, error) {
 
 	fmt.Println("ReadUserById()")
 	row, err := db.Query("select * from users where id = ?", userId)
@@ -185,7 +121,7 @@ func ReadUserById(db *sql.DB, userId string) (User, error) {
 	checkError(err)
 	defer row.Close()
 
-	var user = User{} //! 배열로 받아서 모든 테이블 정보 가져오기 해야함
+	var user = models.User{} //! 배열로 받아서 모든 테이블 정보 가져오기 해야함
 
 	for row.Next() {
 		err := row.Scan(&user.Id, &user.Password, &user.Name, &user.Created, &user.Day, &user.Totaltime, &user.Trytime, &user.Recoverytime, &user.Frontcount, &user.Backcount, &user.AvgRPM, &user.AvgSpeed, &user.Distance, &user.Musclenum, &user.Kcalorynum, &user.Gender, &user.Area, &user.Birth, &user.Bike_info, &user.Career, &user.Club, &user.Email)
@@ -206,7 +142,7 @@ var (
 )
 
 const (
-	MaxPerPage = 10
+	MaxPerPage = 20
 )
 
 func checkError(err error) {
@@ -255,14 +191,46 @@ func CreateUser(db *sql.DB, req *http.Request) *CustomError { //! 이거는 어�
 	id := req.PostFormValue("id")
 	password := req.PostFormValue("password")
 	name := req.PostFormValue("name")
-	t := time.Now().Format("2006-01-02 15:04:05")
+	//update := time.Now().Format("2006-01-02 15:04:05")
+	created := time.Now().Format("2006-01-02 15:04:05")
+	//day := req.PostFormValue("day")
+	//totaltime := req.PostFormValue("totaltime")
+	//trytime := req.PostFormValue("trytime")
+	//recoverytime := req.PostFormValue("recoverytime")
+	//frontcount := req.PostFormValue("frontcount")
+	//backcount := req.PostFormValue("backcount")
+	//avgrpm := req.PostFormValue("avgrpm")
+	//avgspeed := req.PostFormValue("avgspeed")
+	//distance := req.PostFormValue("distance")
+	//musclenum := req.PostFormValue("musclenum")
+	//Kcalorynum := req.PostFormValue("Kcalorynum")
+	gender := req.PostFormValue("gender")
+	area := req.PostFormValue("area")
+	birth := req.PostFormValue("birth")
+	bike_info := req.PostFormValue("bike_info")
+	career := req.PostFormValue("career")
+	//club := req.PostFormValue("club")
+	email := req.PostFormValue("email")
+
 	// Create 2
-	stmt, err := db.Prepare("insert into users (id, password, name, created,day,totaltime,trytime,recoverytime,backcount,avgRPM,avgSpeed,distance,musclenum,kcalorynum,gender,area,birth,bike_info,career,club,email) values (?,?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := db.Prepare("insert into users (id, password, name, created, gender, area, birth, bike_info, career, email) values (?,?, ?, ?, ?,?,?,?,?,?)")
+	// stmt, err := db.Prepare("insert into user (id, password, name,created) values (?,?, ?,?)")
 	checkError(err)
 	defer stmt.Close()
 
 	bs, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-	_, err = stmt.Exec(id, bs, name, t)
+	_, err = stmt.Exec(id, bs, name, created, gender, area, birth, bike_info, career, email)
+	if err != nil {
+		fmt.Println("error:", err)
+		return &CustomError{Code: "1062", Message: "already exists id."}
+	}
+
+	stm, err := db.Prepare("insert into boards (id, name, created_at, gender, area, birth, bike_info, career, email) values (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	// stmt, err := db.Prepare("insert into user (id, password, name,created) values (?,?, ?,?)")
+	checkError(err)
+	defer stmt.Close()
+
+	_, err = stm.Exec(id, name, created, gender, area, birth, bike_info, career, email)
 	if err != nil {
 		fmt.Println("error:", err)
 		return &CustomError{Code: "1062", Message: "already exists id."}
@@ -292,11 +260,11 @@ func signUp(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-/***************************************관리자 페이지*******************************************************/
+/*******************************************관리자 페이지*******************************************************/
 
 //관리자 페이지
 func board(w http.ResponseWriter, r *http.Request) {
-	var b []Board
+	var b []models.Board
 	if !alreadyLoggedIn(w, r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther) //! possible to connect to /board/ for a while after logging out 11.07
 		return
@@ -327,7 +295,7 @@ func board(w http.ResponseWriter, r *http.Request) {
 			pgNums, _ := pg.PageNums()
 			pageSlice := getPageList(page, pgNums)
 
-			temp := PassedData{
+			temp := models.PassedData{
 				PostData: b,
 				Target:   target,
 				Value:    keyword,
@@ -348,7 +316,7 @@ func board(w http.ResponseWriter, r *http.Request) {
 			pgNums, _ := pg.PageNums()
 			pageSlice := getPageList(page, pgNums)
 
-			temp := PassedData{
+			temp := models.PassedData{
 				PostData: b,
 				Target:   target,
 				Value:    keyword,
@@ -374,7 +342,7 @@ func board(w http.ResponseWriter, r *http.Request) {
 	pgNums, _ := pg.PageNums()
 	pageSlice := getPageList(page, pgNums)
 
-	temp := PassedData{
+	temp := models.PassedData{
 		PostData: b,
 		PageList: pageSlice,
 		Page:     page,
@@ -391,7 +359,7 @@ func write(w http.ResponseWriter, r *http.Request) { //! board 데이터 수정
 		area := r.PostFormValue("area")
 		bike_info := r.PostFormValue("bike_info")
 
-		newPost := Board{Email: email, Area: area, Bike_info: bike_info}
+		newPost := models.Board{Email: email, Area: area, Bike_info: bike_info}
 		gormDB.Create(&newPost)
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -405,7 +373,7 @@ func write(w http.ResponseWriter, r *http.Request) { //! board 데이터 수정
 //관리자페이지에 삭제
 func delete(w http.ResponseWriter, r *http.Request) { //! board 삭제
 	id := strings.TrimPrefix(r.URL.Path, "/delete/")
-	gormDB.Delete(&Board{}, id)
+	gormDB.Delete(&models.Board{}, id)
 
 	http.Redirect(w, r, "/board", http.StatusSeeOther)
 }
@@ -414,13 +382,13 @@ func delete(w http.ResponseWriter, r *http.Request) { //! board 삭제
 func edit(w http.ResponseWriter, r *http.Request) {
 
 	id := strings.TrimPrefix(r.URL.Path, "/edit/")
-	var b Board
+	var b models.Board
 
 	gormDB.First(&b, id)
 
 	if r.Method == http.MethodPost {
 
-		gormDB.Model(&b).Updates(Board{Email: r.PostFormValue("email"), Area: r.PostFormValue("area"), Bike_info: r.PostFormValue("bike_info")})
+		gormDB.Model(&b).Updates(models.Board{Email: r.PostFormValue("email"), Area: r.PostFormValue("area"), Bike_info: r.PostFormValue("bike_info")})
 		// gormDB.Model(&b).Updates(Board{Name: r.PostFormValue("name"), Totaltime: r.PostFormValue("totaltime")})
 		var byteBuf bytes.Buffer
 		byteBuf.WriteString("/post/")
@@ -437,7 +405,7 @@ func post(w http.ResponseWriter, r *http.Request) {
 	// id := r.FormValue("id")
 	id := strings.TrimPrefix(r.URL.Path, "/post/")
 
-	var b Board
+	var b models.Board
 	gormDB.First(&b, id)
 
 	tpl.ExecuteTemplate(w, "post.gohtml", b)
@@ -478,7 +446,7 @@ func mypage(w http.ResponseWriter, req *http.Request) {
 
 //랭킹  (board2.html -> ranking.html)
 func ranking(w http.ResponseWriter, r *http.Request) {
-	var b []Board
+	var b []models.Board
 
 	if !alreadyLoggedIn(w, r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther) //! possible to connect to /board/ for a while after logging out 11.07
@@ -509,7 +477,7 @@ func ranking(w http.ResponseWriter, r *http.Request) {
 			pgNums, _ := pg.PageNums()
 			pageSlice := getPageList(page, pgNums)
 
-			temp := PassedData{
+			temp := models.PassedData{
 				PostData: b,
 				Target:   target,
 				Value:    keyword,
@@ -530,7 +498,7 @@ func ranking(w http.ResponseWriter, r *http.Request) {
 			pgNums, _ := pg.PageNums()
 			pageSlice := getPageList(page, pgNums)
 
-			temp := PassedData{
+			temp := models.PassedData{
 				PostData: b,
 				Target:   target,
 				Value:    keyword,
@@ -556,7 +524,7 @@ func ranking(w http.ResponseWriter, r *http.Request) {
 	pgNums, _ := pg.PageNums()
 	pageSlice := getPageList(page, pgNums)
 
-	temp := PassedData{
+	temp := models.PassedData{
 		PostData: b,
 		PageList: pageSlice,
 		Page:     page,
@@ -580,7 +548,7 @@ func CreateSession(db *sql.DB, sessionId string, userId string) {
 }
 
 //세션을 통해 유저 정보 가져오기
-func getUser(w http.ResponseWriter, req *http.Request) User {
+func getUser(w http.ResponseWriter, req *http.Request) models.User {
 	fmt.Println("getUser()")
 	// get cookie
 	c, err := req.Cookie("sessions")
@@ -595,7 +563,7 @@ func getUser(w http.ResponseWriter, req *http.Request) User {
 	http.SetCookie(w, c)
 
 	// if the user exists already, get user
-	var u User
+	var u models.User
 
 	un, err := ReadSession(db, c.Value)
 	if err != nil {
@@ -774,7 +742,7 @@ func main() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	gormDB.AutoMigrate(&Board{}, &User{}, &Session{}) //! 자동으로 author, content 심어준다
+	gormDB.AutoMigrate(&models.Board{}, &models.User{}, &models.Session{}) //! 자동으로 author, content 심어준다
 	fmt.Println("Successfully Connected to DB")
 
 	http.HandleFunc("/", login)

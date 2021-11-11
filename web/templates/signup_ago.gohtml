@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="signup.js"></script>
+<link rel="stylesheet" href="/web/assets/css/material-dashboard.css?v=2.1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!------ Include the above in your HEAD tag ---------->
+</head>
+<body>
+
+<div class="container">
+   <div id="login-box">
+      <div class="logo">
+         <!-- <img src="NAVER_CI_Green.png" > -->
+         <!-- <img src="TECH_CI_Green2.png" id="logo"> -->
+         <h1 class="logo-caption"><span class="tweak">S</span>ignup</h1>
+      </div>/.logo
+        <form class = "input" action="" method="post">
+        <h4> ID: <input type="text" name="id" id="id" placeholder="ID"></h4>
+        <h4> 이름: <input type="text" name="name" id="name" placeholder="NAME"></h4>
+        <h4> PASSWORD: <input type="password" name="password" id="pw" placeholder="PASSWORD"> </h4>
+        <h4> Check PW: <input type="password" name="check" id="check" placeholder="PASSWORD"></h4>
+
+         {{/* <h4> day: <input type="text" name="day" id="day" ></h4>
+         <h4> totaltime: <input type="text" name="totaltime" id="totaltime" ></h4>
+         <h4> trytime: <input type="text" name="trytime" id="trytime" ></h4>
+         <h4> recoverytime: <input type="text" name="recoverytime" id="recoverytime" ></h4>
+         <h4> frontcount: <input type="text" name="frontcount" id="frontcount" ></h4>
+         <h4> backcount: <input type="text" name="backcount" id="backcount"></h4>
+         <h4> avgrpm: <input type="text" name="avgrpm" id="avgrpm" ></h4>
+         <h4> avgspeed: <input type="text" name="avgspeed" id="avgspeed" ></h4>
+         <h4> distance: <input type="text" name="distance" id="distance" ></h4>
+         <h4> musclenum: <input type="text" name="musclenum" id="musclenum" ></h4>
+         <h4> Kcalorynum: <input type="text" name="Kcalorynum" id="Kcalorynum" ></h4> */}}
+         <h4> gender: <input type="text" name="gender" id="gender" ></h4>
+         <h4> area: <input type="text" name="area" id="area" ></h4>
+         <h4> birth: <input type="text" name="birth" id="birth" ></h4>
+         <h4> bike_info: <input type="text" name="bike_info" id="bike_info" ></h4>
+         <h4> career: <input type="text" name="career" id="career" ></h4>
+         <h4> club: <input type="text" name="club" id="club" ></h4>
+         <h4> email: <input type="text" name="email" id="email" ></h4><br>
+         
+         <input id = "submitBtn" type="submit"  value="Create">
+
+
+
+
+
+
+
+
+        {{if .error}}
+        <h5 class="fail"> {{.error.Code}}: {{.error.Message}}</h5>
+        {{end}}
+        
+    </form>
+   </div><!-- /#login-box -->
+</div><!-- /.container -->
+<div id="particles-js"></div>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+<!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>-->
+
+</body>
+</html>
